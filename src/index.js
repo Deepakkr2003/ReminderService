@@ -2,14 +2,16 @@ const express = require('express');
 const bodyParser = require('body-parser');
 
 const {PORT}  = require('./config/serverConfig');
-const {createChannel} = require('./utils/messageQueue')
+const {subscribedMesssage,createChannel} = require('./utils/messageQueue')
 
 const TicketController = require('./controllers/ticket-controller')
+const EmailService = require('./services/email-service')
 
-// const cron = require('node-cron')
+
 const jobs = require('./utils/job')
 
-// const {sendBasicEmail} = require('./services/email-service')
+const {REMINDER_BINDING_KEY} = require('./config/serverConfig')
+
 
 const setupAndStartServer = async() => {
     const app = express();
@@ -20,18 +22,12 @@ const setupAndStartServer = async() => {
 
     app.post('/api/v1/tickets',TicketController.create);
 
+    const channel= await createChannel();
+    subscribedMesssage(channel, EmailService.subscribedEvents, REMINDER_BINDING_KEY);
+
     app.listen(PORT,()=>{
         console.log(`Server started at port ${PORT}`);
-        jobs();
-
-        // sendBasicEmail(
-        //     'support@admin.com',
-        //     'deepshub8883@gmail.com',
-        //     'This is a testing email',
-        //     'Hey, how are you, I hope you like the support'
-        // )
-        
-        
+        // jobs();
     })
 }
 
